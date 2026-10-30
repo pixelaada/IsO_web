@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>IsO</title>
+  <link rel="icon" href="imagenes\icono.png">
+  <link rel="stylesheet" href="css\inicioStyle.css">
+  <script defer src="js\iniciojs.js"></script>
+</head>
+
+<body>
+  <main
+    class="stage"
+    id="stage"
+    role="img"
+    tabindex="0"
+    aria-label="Obra interactiva: la imagen pierde resolución al mover el cursor o arrastrar el dedo."
+  >
+    <div class="layers" id="layers" aria-hidden="true">
+      <img class="layer layer--base" src="imagenes\inicioMain.JPG" fetchpriority="high">
+    </div>
+  </main>
+
+  <div class="loading" id="loading" role="status" aria-live="polite" hidden>
+    <span class="loading__mark" aria-hidden="true"></span>
+    <span class="sr-only">Cargando la obra</span>
+  </div>
+
+  <p class="error" id="error" role="alert" hidden></p>
+
+  <div class="hud" id="hud" aria-hidden="true" hidden></div>
+
+  <noscript>
+    <p class="noscript">Esta obra necesita JavaScript para perder resolución.</p>
+  </noscript>
+</body>
+</html>

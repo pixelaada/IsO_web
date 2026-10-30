@@ -1,0 +1,420 @@
+:root {
+  color-scheme: dark;
+  --bg: #000000;
+  --text: #e8e4dc;
+  --muted: #8a857c;
+  --pad-x: 4vw;
+  --pad-y: 6vh;
+  --inset-x: max(var(--pad-x), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --inset-y: max(var(--pad-y), env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+  --stage-aspect: 1.5;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  height: 100svh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  padding: var(--inset-y) var(--inset-x);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Texto de arriba: el ancho y el tamaño se ajustan acá. */
+.intro {
+  flex: none;
+  margin: 0;
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* Toma todo el alto que sobra después del texto. */
+.stage-wrap {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+
+.stage {
+  position: relative;
+  /* Se achica al espacio disponible conservando la proporción de la imagen. */
+  width: min(100cqw, 100cqh * var(--stage-aspect));
+  aspect-ratio: var(--stage-aspect);
+  contain: layout paint;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: crosshair;
+  outline: none;
+  animation: reveal 700ms ease both;
+}
+
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.stage:focus-visible {
+  outline: 1px solid rgba(232, 228, 220, 0.55);
+  outline-offset: -10px;
+}
+
+/* Lo que hay detrás de la imagen: el JS lo recorta para que solo se vea por los
+   huecos (ver layoutReveal en el script). */
+.reveal {
+  position: absolute;
+  inset: 0;
+  /* Fondo opaco: dentro del hueco tapa la imagen y solo se ven los iconos. */
+  background: var(--bg);
+  /* Contenedor de tamaño: permite medir el texto en cqw (% del ancho del escenario). */
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5%;
+  padding: 7% 8%;
+  pointer-events: none; /* cuando los iconos se puedan clickear, se saca esta línea */
+}
+
+.reveal-item {
+  flex: 1 1 0;
+  height: 100%;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.reveal-icon {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* los tres ocupan el mismo cuadrado, sin deformarse */
+  object-fit: contain;
+}
+
+.reveal-label {
+  flex: none;
+  margin-top: 6%;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(5px, 2.2cqw, 26px);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.layers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.layer--pixelated {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Pedazos sueltos: se arrastran por toda la página y van por encima de todo. */
+.pieces {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.piece {
+  position: absolute;
+  image-rendering: pixelated;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+.piece:active {
+  cursor: grabbing;
+}
+
+/* Cuando la imagen llegó al tope, el cursor avisa que se puede arrancar. */
+.stage.can-tear {
+  cursor: grab;
+}
+
+/* Encima de un ícono visible: el cursor avisa que se puede abrir. */
+.stage.over-file {
+  cursor: pointer;
+}
+
+/* Ventanas de los archivos: van por encima de los pedazos. */
+.windows {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, calc(100vw - 24px));
+  height: min(320px, calc(100vh - 24px));
+  /* Gris oscuro translúcido: se intuye la obra detrás. */
+  background: rgba(32, 32, 32, 0.7);
+  border: 1px solid rgba(232, 228, 220, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  /* Recorta el contenido: el texto no se escapa por las esquinas redondeadas. */
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* Barra de título: la única parte que se agarra para mover la ventana. */
+.window__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 34px;
+  padding: 0 0.3rem 0 0.8rem;
+  background: rgba(58, 58, 62, 0.7); /* un poco más clara que el cuerpo */
+  border-bottom: 1px solid rgba(232, 228, 220, 0.1);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.window__bar:active {
+  cursor: grabbing;
+}
+
+.window__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.window__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.window__close:hover,
+.window__close:focus-visible {
+  background: #c42b1c;
+  color: #ffffff;
+  outline: none;
+}
+
+/* Cuerpo del archivo: scrollea cuando el texto no entra. */
+.window__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.9rem 1rem 1.1rem;
+  line-height: 1.7;
+  user-select: text;
+  -webkit-user-select: text;
+  /* Barra fina, parecida a la de Windows. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(232, 228, 220, 0.28) transparent;
+}
+
+.window__body p {
+  margin: 0 0 0.9rem;
+}
+
+.window__body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Ventana con imagen: la foto se adapta al tamaño de la ventana, sin deformarse. */
+.window__body--image {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.window__image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 'contain': entra completa y mantiene su proporción, aunque quede aire a los lados. */
+  object-fit: contain;
+}
+
+.window__body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.window__body::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background: rgba(232, 228, 220, 0.28);
+  background-clip: content-box;
+}
+
+.window__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.loading__mark {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.2);
+  }
+}
+
+.error {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0 1rem;
+  max-width: 32rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.hud {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.35rem 0.5rem;
+  color: var(--muted);
+  background: rgba(6, 6, 6, 0.72);
+  font: 11px/1.4 ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .loading__mark {
+    animation: none;
+  }
+}
